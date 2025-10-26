@@ -131,7 +131,7 @@ def vector_search_agent(state: State):
         "mission": mission,
         "references": references,
         "messages": messages,
-        "outline": target
+        "target": target
     }
 
     # LLM과 벡터 검색 모델 연결
@@ -144,9 +144,9 @@ def vector_search_agent(state: State):
     for tool_call in search_plans.tool_calls:
         print('-----------------------------------', tool_call)
         args = tool_call["args"]
-       
-        query = args["query"] 
-        retrieved_docs = retrieve(args)
+
+        query = args["query"]
+        retrieved_docs = retrieve.invoke(args)
 		#① (1) 결과 담아 두기
         references["queries"].append(query) 
         references["docs"] += retrieved_docs
