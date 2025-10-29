@@ -168,3 +168,76 @@ def retrieve(query: str, top_k: int=5):
     retrieved_docs = retriever.invoke(query)
 
     return retrieved_docs
+
+def calculate_nutrition_needs(user_info: dict) -> dict:
+    """
+    사용자 정보 기반 일일 영양소 요구량 계산
+
+    Args:
+        user_info: {
+            'gender': '남성' or '여성',
+            'height': int (cm),
+            'weight': int (kg),
+            'goal': '다이어트' or '근육증가' or '체중유지' or '건강관리'
+        }
+
+    Returns:
+        {
+            'calories': int,  # 일일 칼로리 (kcal)
+            'protein': int,   # 일일 단백질 (g)
+            'carbs': int,     # 일일 탄수화물 (g)
+            'fat': int        # 일일 지방 (g)
+        }
+    """
+    gender = user_info.get('gender', '남성')
+    height = user_info.get('height', 170)
+    weight = user_info.get('weight', 70)
+    goal = user_info.get('goal', '체중유지')
+
+    # 1. 기초대사량 (BMR) 계산 - Harris-Benedict 공식
+    if gender == '남성':
+        bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * 30)  # 나이 30세 가정
+    else:
+        bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * 30)
+
+    # 2. 활동대사량 (TDEE) 계산 - 활동량 보통 (1.55 적용)
+    tdee = bmr * 1.55
+
+    # 3. 목표에 따른 칼로리 및 영양소 비율 조정
+    if goal == '다이어트':
+        calories = int(tdee * 0.8)  # 20% 감소
+        protein_ratio = 0.30  # 30%
+        carbs_ratio = 0.40    # 40%
+        fat_ratio = 0.30      # 30%
+    elif goal == '근육증가':
+        calories = int(tdee * 1.15)  # 15% 증가
+        protein_ratio = 0.30  # 30%
+        carbs_ratio = 0.50    # 50%
+        fat_ratio = 0.20      # 20%
+    elif goal == '체중유지':
+        calories = int(tdee)
+        protein_ratio = 0.25  # 25%
+        carbs_ratio = 0.50    # 50%
+        fat_ratio = 0.25      # 25%
+    else:  # 건강관리
+        calories = int(tdee)
+        protein_ratio = 0.20  # 20%
+        carbs_ratio = 0.55    # 55%
+        fat_ratio = 0.25      # 25%
+
+    # 4. 영양소 계산 (칼로리 기준)
+    # 단백질: 1g = 4kcal
+    # 탄수화물: 1g = 4kcal
+    # 지방: 1g = 9kcal
+    protein = int((calories * protein_ratio) / 4)
+    carbs = int((calories * carbs_ratio) / 4)
+    fat = int((calories * fat_ratio) / 9)
+
+    return {
+        'calories': calories,
+        'protein': protein,
+        'carbs': carbs,
+        'fat': fat,
+        'bmr': int(bmr),
+        'tdee': int(tdee)
+    }
